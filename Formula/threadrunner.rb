@@ -1,8 +1,8 @@
 class Threadrunner < Formula
   desc "Modern system-level runtime for local LLM execution"
-  homepage "https://github.com/threadrunnerproject/threadrunner"
-  url "https://github.com/threadrunnerproject/threadrunner/releases/download/v0.1.0/threadrunner-macos-universal.tar.gz"
-  sha256 "<PLACEHOLDER_SHA>"
+  homepage "https://github.com/vivienhenz24/threadrunner"
+  url "https://github.com/vivienhenz24/threadrunner/releases/download/v0.1.0/threadrunner-macos-universal.tar.gz"
+  sha256 "344d736363ea0548c35651288139da7dabbdcb79e2213316cddd961c148f5727"
   license "MIT"
   version "0.1.0"
 

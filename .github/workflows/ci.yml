@@ -57,4 +57,26 @@ jobs:
       - name: Run tests - ${{ matrix.name }}
         env:
           RUSTFLAGS: "-D warnings"
-        run: ${{ matrix.test_cmd }} 
+        run: ${{ matrix.test_cmd }}
+
+  lint-formula:
+    name: Lint Homebrew Formula
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Homebrew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo "$(/opt/homebrew/bin/brew shellenv)" >> $GITHUB_ENV
+          source $GITHUB_ENV
+
+      - name: Update Homebrew
+        run: brew update
+
+      - name: Audit formula
+        run: brew audit --formula Formula/threadrunner.rb --strict --online
+
+      - name: Check formula style
+        run: brew style Formula/threadrunner.rb 

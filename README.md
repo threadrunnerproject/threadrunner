@@ -7,22 +7,29 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](Cargo.toml)
 
-*Efficient • Persistent • Streaming • Fast*
+
 
 ---
 
-## 🎯 **What is ThreadRunner?**
+## 🎯 **ThreadRunner?**
 
-ThreadRunner is a **high-performance system daemon** that makes local large language model (LLM) inference feel as natural as using any command-line tool. It intelligently manages model loading, provides persistent background execution, and delivers real-time streaming responses—all optimized for personal machines.
+ThreadRunner is a high-performance system daemon that makes local large language model (LLM) inference feel as natural as using any command-line tool. It intelligently manages model loading, provides persistent background execution, and delivers real-time streaming responses—all optimized for personal machines.
 
-### ✨ **Key Features**
 
-🚀 **Lazy Loading** - Models load only when needed, not on system startup  
-🔥 **Hot Persistence** - Keep models warm in memory between requests  
-⚡ **Streaming Output** - Real-time token generation for responsive UX  
-🔌 **Unix Socket IPC** - Lightning-fast inter-process communication  
-🎛️ **Multi-Backend** - Support for both real AI and testing backends  
-🛡️ **Resource Management** - Automatic cleanup and memory optimization  
+### Install via Homebrew
+```bash
+brew tap yourname/threadrunner  # one time
+brew install threadrunner       # grabs latest release binary
+```
+
+###  **Key Features**
+
+ **Lazy Loading** - Models load only when needed, not on system startup  
+ **Hot Persistence** - Keep models warm in memory between requests  
+ **Streaming Output** - Real-time token generation for responsive UX  
+ **Unix Socket IPC** - Lightning-fast inter-process communication  
+ **Multi-Backend** - Support for both real AI and testing backends  
+ **Resource Management** - Automatic cleanup and memory optimization  
 
 ---
 
