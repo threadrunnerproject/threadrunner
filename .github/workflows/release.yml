@@ -1,0 +1,192 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            output_name: threadrunner-macos-x86_64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            output_name: threadrunner-macos-aarch64
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            output_name: threadrunner-linux-x86_64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation tools (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.target }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Build binary
+        run: |
+          if [[ "${{ matrix.target }}" == *"linux"* ]]; then
+            export RUSTFLAGS='-C target-feature=+crt-static'
+            cargo build --release --target ${{ matrix.target }} --bin threadrunner --features llama
+          else
+            cargo build --release --target ${{ matrix.target }} --bin threadrunner --features llama
+          fi
+
+      - name: Strip binary
+        run: |
+          if [[ "${{ matrix.target }}" == *"apple"* ]]; then
+            strip target/${{ matrix.target }}/release/threadrunner
+          elif [[ "${{ matrix.target }}" == *"linux"* ]]; then
+            strip target/${{ matrix.target }}/release/threadrunner
+          fi
+
+      - name: Create archive
+        run: |
+          mkdir -p dist
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            cp target/${{ matrix.target }}/release/threadrunner.exe dist/
+            cd dist && tar -czf ${{ matrix.output_name }}.tar.gz threadrunner.exe
+          else
+            cp target/${{ matrix.target }}/release/threadrunner dist/
+            cd dist && tar -czf ${{ matrix.output_name }}.tar.gz threadrunner
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.output_name }}
+          path: dist/${{ matrix.output_name }}.tar.gz
+
+  create-universal-macos:
+    name: Create Universal macOS Binary
+    runs-on: macos-latest
+    needs: build
+    steps:
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Extract binaries
+        run: |
+          mkdir -p extracted
+          cd artifacts/threadrunner-macos-x86_64
+          tar -xzf threadrunner-macos-x86_64.tar.gz
+          mv threadrunner ../extracted/threadrunner-x86_64
+          cd ../threadrunner-macos-aarch64
+          tar -xzf threadrunner-macos-aarch64.tar.gz
+          mv threadrunner ../extracted/threadrunner-aarch64
+
+      - name: Create universal binary
+        run: |
+          mkdir -p dist
+          lipo -create -output dist/threadrunner artifacts/extracted/threadrunner-x86_64 artifacts/extracted/threadrunner-aarch64
+          strip dist/threadrunner
+          cd dist && tar -czf threadrunner-macos-universal.tar.gz threadrunner
+
+      - name: Upload universal macOS artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: threadrunner-macos-universal
+          path: dist/threadrunner-macos-universal.tar.gz
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build, create-universal-macos]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          # Copy Linux binary
+          cp artifacts/threadrunner-linux-x86_64/threadrunner-linux-x86_64.tar.gz release-assets/
+          # Copy universal macOS binary
+          cp artifacts/threadrunner-macos-universal/threadrunner-macos-universal.tar.gz release-assets/
+
+      - name: Generate checksums
+        run: |
+          cd release-assets
+          sha256sum *.tar.gz > checksums.txt
+          cat checksums.txt
+
+      - name: Extract tag name
+        id: tag_name
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
+          release_name: Release ${{ steps.tag_name.outputs.TAG_NAME }}
+          draft: false
+          prerelease: ${{ contains(steps.tag_name.outputs.TAG_NAME, '-') }}
+
+      - name: Upload Linux x86_64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release-assets/threadrunner-linux-x86_64.tar.gz
+          asset_name: threadrunner-linux-x86_64.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload macOS Universal Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release-assets/threadrunner-macos-universal.tar.gz
+          asset_name: threadrunner-macos-universal.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release-assets/checksums.txt
+          asset_name: checksums.txt
+          asset_content_type: text/plain 

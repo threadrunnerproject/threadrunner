@@ -1,0 +1,114 @@
+name: Bump Homebrew Formula
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  bump-formula:
+    name: Update Homebrew Formula
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.release.tag_name, 'v')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          VERSION=${TAG_NAME#v}  # Remove 'v' prefix
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Download release asset
+        id: download_asset
+        run: |
+          ASSET_URL="https://github.com/${{ github.repository }}/releases/download/${{ steps.extract_version.outputs.TAG_NAME }}/threadrunner-macos-universal.tar.gz"
+          echo "Downloading asset from: $ASSET_URL"
+          
+          # Download the asset
+          curl -L -o threadrunner-macos-universal.tar.gz "$ASSET_URL"
+          
+          # Verify download was successful
+          if [[ ! -f threadrunner-macos-universal.tar.gz ]]; then
+            echo "Failed to download asset"
+            exit 1
+          fi
+          
+          echo "ASSET_URL=$ASSET_URL" >> $GITHUB_OUTPUT
+
+      - name: Compute SHA-256
+        id: compute_sha
+        run: |
+          # Compute SHA-256 of the downloaded asset
+          SHA256=$(shasum -a 256 threadrunner-macos-universal.tar.gz | cut -d ' ' -f 1)
+          echo "SHA256=$SHA256" >> $GITHUB_OUTPUT
+          echo "Computed SHA-256: $SHA256"
+
+      - name: Update formula
+        run: |
+          VERSION="${{ steps.extract_version.outputs.VERSION }}"
+          TAG_NAME="${{ steps.extract_version.outputs.TAG_NAME }}"
+          ASSET_URL="${{ steps.download_asset.outputs.ASSET_URL }}"
+          SHA256="${{ steps.compute_sha.outputs.SHA256 }}"
+          
+          echo "Updating formula with:"
+          echo "  Version: $VERSION"
+          echo "  URL: $ASSET_URL"
+          echo "  SHA-256: $SHA256"
+          
+          # Update the formula file using sed
+          sed -i.bak \
+            -e "s|url \".*\"|url \"$ASSET_URL\"|" \
+            -e "s|sha256 \".*\"|sha256 \"$SHA256\"|" \
+            -e "s|version \".*\"|version \"$VERSION\"|" \
+            Formula/threadrunner.rb
+          
+          # Remove backup file
+          rm Formula/threadrunner.rb.bak
+          
+          # Show the changes
+          echo "Updated formula:"
+          cat Formula/threadrunner.rb
+
+      - name: Verify formula syntax
+        run: |
+          # Basic syntax check - ensure the file is valid Ruby
+          ruby -c Formula/threadrunner.rb
+          echo "Formula syntax is valid"
+
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Commit and push changes
+        run: |
+          VERSION="${{ steps.extract_version.outputs.VERSION }}"
+          
+          # Check if there are changes to commit
+          if git diff --quiet Formula/threadrunner.rb; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          # Stage and commit the changes
+          git add Formula/threadrunner.rb
+          git commit -m "chore(formula): bump to $VERSION"
+          
+          # Push the changes
+          git push origin main
+          
+          echo "Successfully updated formula to version $VERSION"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Clean up downloaded files
+          rm -f threadrunner-macos-universal.tar.gz 
