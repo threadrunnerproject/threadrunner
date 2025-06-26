@@ -1,4 +1,4 @@
-# 🧠 ThreadRunner
+# ThreadRunner
 
 ## Project Summary
 
