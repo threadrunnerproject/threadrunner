@@ -4,5 +4,12 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-tokio.workspace = true
-threadrunner-core = { path = "../core" } 
+anyhow          = "1"
+clap            = { version = "4", features = ["derive"] }
+serde_json      = "1"
+tokio           = { workspace = true, features = ["net", "process", "rt-multi-thread", "signal"] }
+threadrunner-core = { path = "../core" }
+directories     = "5"          # for locating home dir 
+
+[dev-dependencies]
+tempfile        = "3" 
