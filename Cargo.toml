@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "crates/core",
+    "crates/daemon",
+    "crates/cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+thiserror = "1" 
