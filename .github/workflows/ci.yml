@@ -14,5 +14,14 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: TODO
-        run: echo "Add check job steps" 
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Check code
+        run: cargo check --workspace
+      - name: Run tests
+        run: cargo test --workspace 
