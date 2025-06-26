@@ -11,26 +11,16 @@
 
 ---
 
-## 🎯 **ThreadRunner?**
+## **ThreadRunner**
 
-ThreadRunner is a high-performance system daemon that makes local large language model (LLM) inference feel as natural as using any command-line tool. It intelligently manages model loading, provides persistent background execution, and delivers real-time streaming responses—all optimized for personal machines.
+Threadrunner is a system-level runtime for executing LLMs efficiently and persistently on personal machines. It loads models only when needed, keeps them warm during active use, and provides a unified CLI for interaction. The end goal is to build a library for local model handling, allowing users to swap, feed context and fine tune llms on their local env. Hopefully people can build cool applications faster using this lib! Contact vhenz@college.harvard.edu for anything, always down to chat.
 
 
 ### Install via Homebrew
 ```bash
-brew tap yourname/threadrunner  # one time
+brew tap vivienhenz24/threadrunner  # one time
 brew install threadrunner       # grabs latest release binary
 ```
-
-###  **Key Features**
-
- **Lazy Loading** - Models load only when needed, not on system startup  
- **Hot Persistence** - Keep models warm in memory between requests  
- **Streaming Output** - Real-time token generation for responsive UX  
- **Unix Socket IPC** - Lightning-fast inter-process communication  
- **Multi-Backend** - Support for both real AI and testing backends  
- **Resource Management** - Automatic cleanup and memory optimization  
-
 ---
 
 ## 🏗️ **Architecture Overview**
@@ -533,25 +523,10 @@ cargo test --workspace
 cargo build --workspace --all-features
 ```
 
-### 📋 **Development Guidelines**
 
-- 🧪 **Testing**: All new features must include tests
-- 📝 **Documentation**: Update docs for user-facing changes  
-- 🎨 **Code Style**: Use `cargo fmt` and `cargo clippy`
-- 🔧 **Features**: Use feature flags for optional dependencies
-- 📊 **Performance**: Profile and benchmark critical paths
 
-### 🎯 **Areas for Contribution**
 
-- 🚀 **Performance Optimizations** - Memory, CPU, I/O improvements
-- 🧪 **Backend Implementations** - New model backends (OpenAI, Anthropic, etc.)
-- 🛠️ **Tooling** - Build scripts, packaging, CI/CD improvements
-- 📚 **Documentation** - Examples, tutorials, API documentation
-- 🐛 **Bug Fixes** - Issues, edge cases, error handling
-
----
-
-## 📄 **License**
+##  **License**
 
 ThreadRunner is open source under the **MIT License**.
 
@@ -582,8 +557,6 @@ SOFTWARE.
 ---
 
 <div align="center">
-
-**🧵 ThreadRunner** - *Making local LLMs feel native*
 
 [![⭐ Star this repo](https://img.shields.io/badge/⭐-Star%20this%20repo-yellow)](https://github.com/vivienhenz24/threadrunner)
 [![🐛 Report Issues](https://img.shields.io/badge/🐛-Report%20Issues-red)](https://github.com/vivienhenz24/threadrunner/issues)
