@@ -1,2 +1,4 @@
 pub mod model;
-pub use model::ModelBackend; 
+pub mod ipc;
+pub use model::ModelBackend;
+pub use ipc::{PromptRequest, TokenResponse, PROTOCOL_VERSION}; 
