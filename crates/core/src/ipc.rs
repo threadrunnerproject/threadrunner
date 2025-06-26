@@ -29,6 +29,25 @@ pub struct TokenResponse {
     pub eos: bool,
 }
 
+/// Response structure for error information from the daemon
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ErrorResponse {
+    /// Error message
+    pub error: String,
+    /// Error type/kind for categorization
+    pub error_type: String,
+}
+
+/// Unified response type that can be either a token or an error
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum Response {
+    #[serde(rename = "token")]
+    Token(TokenResponse),
+    #[serde(rename = "error")]
+    Error(ErrorResponse),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -59,5 +78,37 @@ mod tests {
         
         assert_eq!(original.token, deserialized.token, "Token field should match after round-trip");
         assert_eq!(original.eos, deserialized.eos, "EOS field should match after round-trip");
+    }
+
+    #[test]
+    fn test_error_response_serialization() {
+        let error_response = ErrorResponse {
+            error: "Model failed to load".to_string(),
+            error_type: "ModelLoad".to_string(),
+        };
+        
+        let json = serde_json::to_string(&error_response).expect("Failed to serialize ErrorResponse");
+        
+        assert!(json.contains("\"error\":\"Model failed to load\""), "JSON should contain error field");
+        assert!(json.contains("\"error_type\":\"ModelLoad\""), "JSON should contain error_type field");
+    }
+
+    #[test]
+    fn test_response_enum_serialization() {
+        let token_response = Response::Token(TokenResponse {
+            token: Some("hello".to_string()),
+            eos: false,
+        });
+        
+        let error_response = Response::Error(ErrorResponse {
+            error: "Something went wrong".to_string(),
+            error_type: "Protocol".to_string(),
+        });
+        
+        let token_json = serde_json::to_string(&token_response).expect("Failed to serialize token response");
+        let error_json = serde_json::to_string(&error_response).expect("Failed to serialize error response");
+        
+        assert!(token_json.contains("\"type\":\"token\""), "Token response should have type field");
+        assert!(error_json.contains("\"type\":\"error\""), "Error response should have type field");
     }
 } 

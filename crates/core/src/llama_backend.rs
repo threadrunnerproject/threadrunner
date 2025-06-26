@@ -1,4 +1,4 @@
-use anyhow::Result;
+use crate::Result;
 use std::path::Path;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread::{self, JoinHandle};
@@ -54,9 +54,9 @@ impl ModelBackend for LlamaBackend {
         
         // Load the model using the static constructor pattern expected by trait
         let model = LlamaModel::load_from_file(
-            model_path.to_str().ok_or_else(|| anyhow::anyhow!("Invalid UTF-8 in model path"))?,
+            model_path.to_str().ok_or_else(|| crate::Error::Protocol("Invalid UTF-8 in model path".to_string()))?,
             LlamaParams::default()
-        )?;
+        ).map_err(|e| crate::Error::ModelLoad(anyhow::Error::from(e)))?;
         
         Ok(Self::new(model))
     }
@@ -66,7 +66,8 @@ impl ModelBackend for LlamaBackend {
         self.stop_generation();
         
         // Create a new session for this prompt
-        let session = self.model.create_session(SessionParams::default())?;
+        let session = self.model.create_session(SessionParams::default())
+            .map_err(|e| crate::Error::ModelLoad(anyhow::Error::from(e)))?;
         
         // Format the prompt according to TinyLlama's Zephyr format
         let formatted_prompt = format!(
@@ -76,7 +77,8 @@ impl ModelBackend for LlamaBackend {
         
         // Advance context with the formatted prompt
         let mut session = session;
-        session.advance_context(&formatted_prompt)?;
+        session.advance_context(&formatted_prompt)
+            .map_err(|e| crate::Error::ModelLoad(anyhow::Error::from(e)))?;
         
         // Set up channels for token communication
         let (token_sender, token_receiver) = mpsc::channel();
@@ -127,7 +129,8 @@ impl ModelBackend for LlamaBackend {
         });
         
         // Store the communication channels and worker handle
-        self.session = Some(self.model.create_session(SessionParams::default())?); // Keep a session reference
+        self.session = Some(self.model.create_session(SessionParams::default())
+            .map_err(|e| crate::Error::ModelLoad(anyhow::Error::from(e)))?); // Keep a session reference
         self.token_receiver = Some(token_receiver);
         self.worker_handle = Some(worker_handle);
         self.stop_sender = Some(stop_sender);

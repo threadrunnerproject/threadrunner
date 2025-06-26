@@ -15,6 +15,9 @@ serde_json      = "1"
 tokio           = { workspace = true, features = ["net", "process", "rt-multi-thread", "signal"] }
 threadrunner-core = { path = "../core" }
 directories     = "5"          # for locating home dir 
+tracing           = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "time"] }
+thiserror         = { workspace = true }
 
 [dev-dependencies]
 tempfile        = "3" 

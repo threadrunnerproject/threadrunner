@@ -24,6 +24,8 @@ jobs:
       - name: Check code
         run: cargo check --workspace
       - name: Run tests
+        env:
+          RUSTFLAGS: "-D warnings"
         run: cargo test --workspace
 
   build-matrix:
@@ -35,10 +37,12 @@ jobs:
           - name: "Dummy Backend"
             features: ""
             check_cmd: "cargo check --workspace"
+            test_cmd: "cargo test --workspace"
           # Test llama backend 
           - name: "Llama Backend"
             features: "core/llama"
             check_cmd: "cargo check --workspace --no-default-features --features \"core/llama\""
+            test_cmd: "cargo test --workspace --no-default-features --features \"core/llama\""
     name: Build (${{ matrix.name }})
     steps:
       - name: Checkout code
@@ -49,4 +53,8 @@ jobs:
           toolchain: stable
           override: true
       - name: Check compilation - ${{ matrix.name }}
-        run: ${{ matrix.check_cmd }} 
+        run: ${{ matrix.check_cmd }}
+      - name: Run tests - ${{ matrix.name }}
+        env:
+          RUSTFLAGS: "-D warnings"
+        run: ${{ matrix.test_cmd }} 

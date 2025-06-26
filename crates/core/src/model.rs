@@ -5,7 +5,7 @@
 //! Implementations can wrap different backends like llama.cpp or llama-rs while
 //! providing a consistent API for the daemon and other components.
 
-use anyhow::Result;
+use crate::Result;
 use std::path::Path;
 
 #[cfg(feature = "dummy")]
@@ -103,7 +103,7 @@ impl BoxedModelBackend {
         if let Some(ref mut backend) = self.inner {
             backend.prompt(text)
         } else {
-            anyhow::bail!("Backend has been unloaded")
+            Err(crate::Error::Unknown)
         }
     }
 
@@ -111,7 +111,7 @@ impl BoxedModelBackend {
         if let Some(ref mut backend) = self.inner {
             backend.next_token()
         } else {
-            anyhow::bail!("Backend has been unloaded")
+            Err(crate::Error::Unknown)
         }
     }
 
@@ -165,7 +165,7 @@ pub fn load_backend(kind: BackendKind, path: &Path) -> Result<BoxedModelBackend>
         
         #[cfg(not(any(feature = "dummy", feature = "llama")))]
         _ => {
-            anyhow::bail!("No backends available - enable either 'dummy' or 'llama' feature")
+            return Err(crate::Error::Unknown);
         }
     };
     
@@ -202,23 +202,22 @@ impl ModelBackend for DummyBackend {
     }
 
     fn prompt(&mut self, text: &str) -> Result<()> {
-        // Split the input text by whitespace and append as "model-ready" tokens
-        let input_tokens: Vec<String> = text
-            .split_whitespace()
-            .map(|word| format!("{}.", word)) // Add a period to simulate processing
-            .collect();
+        // For testing, we just add more tokens based on the prompt length
+        let num_tokens = text.len().min(10).max(3);
         
-        self.tokens.extend(input_tokens);
+        // Cycle through our lorem words to add more tokens
+        let lorem_words = ["sed", "do", "eiusmod", "tempor", "incididunt"];
+        for i in 0..num_tokens {
+            self.tokens.push_back(lorem_words[i % lorem_words.len()].to_string());
+        }
         Ok(())
     }
 
     fn next_token(&mut self) -> Result<Option<String>> {
-        // Pop from the front and return the token
         Ok(self.tokens.pop_front())
     }
 
     fn unload(&mut self) -> Result<()> {
-        // Clear tokens to free memory
         self.tokens.clear();
         Ok(())
     }
