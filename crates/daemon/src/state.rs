@@ -1,7 +1,8 @@
 use std::time::Instant;
+use threadrunner_core::model::BoxedModelBackend;
 
 pub struct DaemonState {
-    pub model: Option<threadrunner_core::model::DummyBackend>,
+    pub model: Option<BoxedModelBackend>,
     pub last_activity: Instant,
 }
 

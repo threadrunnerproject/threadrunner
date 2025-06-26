@@ -3,6 +3,11 @@ name = "threadrunner"
 version.workspace = true
 edition.workspace = true
 
+[features]
+default = ["dummy"]
+dummy = ["threadrunner-core/dummy"]
+llama = ["threadrunner-core/llama"]
+
 [dependencies]
 anyhow          = "1"
 clap            = { version = "4", features = ["derive"] }

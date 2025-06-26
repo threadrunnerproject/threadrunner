@@ -24,4 +24,29 @@ jobs:
       - name: Check code
         run: cargo check --workspace
       - name: Run tests
-        run: cargo test --workspace 
+        run: cargo test --workspace
+
+  build-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Test dummy backend (default)
+          - name: "Dummy Backend"
+            features: ""
+            check_cmd: "cargo check --workspace"
+          # Test llama backend 
+          - name: "Llama Backend"
+            features: "core/llama"
+            check_cmd: "cargo check --workspace --no-default-features --features \"core/llama\""
+    name: Build (${{ matrix.name }})
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Check compilation - ${{ matrix.name }}
+        run: ${{ matrix.check_cmd }} 

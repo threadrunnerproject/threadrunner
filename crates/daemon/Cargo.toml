@@ -3,8 +3,14 @@ name = "threadrunner-daemon"
 version.workspace = true
 edition.workspace = true
 
+[features]
+default = ["dummy"]
+dummy = ["threadrunner-core/dummy"]
+llama = ["threadrunner-core/llama"]
+
 [dependencies]
 anyhow = "1"
+dirs = "5"
 serde_json = "1"
 tokio = { workspace = true, features = ["net", "time", "signal"] }
 threadrunner-core = { path = "../core", features = [] }
