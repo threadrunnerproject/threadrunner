@@ -30,6 +30,7 @@ ThreadRunner is a **high-performance system daemon** that makes local large lang
 
 ThreadRunner follows a **client-daemon architecture** with clean separation between user interface and model execution:
 
+```mermaid
 graph TD
     A["🖥️ CLI User"] --> B["`**threadrunner CLI**<br/>Entry Point`"]
     B --> C{"`🔍 Check Daemon<br/>Running?`"}
@@ -65,9 +66,11 @@ graph TD
     style P fill:#e8f5e8
     style Q fill:#fff3e0
     style O fill:#e8f5e8
+```
 
 ### 🧱 **Component Structure**
 
+```mermaid
 graph LR
     subgraph "🏗️ Workspace Structure"
         A["`**crates/**<br/>📦 Rust Crates`"]
@@ -99,6 +102,7 @@ graph LR
     style D fill:#f3e5f5
     style B fill:#e8f5e8
     style C fill:#fff3e0
+```
 
 ---
 
@@ -164,6 +168,7 @@ Hello! I'm TinyLlama, a conversational AI assistant. I'm designed to be helpful,
 
 ThreadRunner supports multiple backends through Cargo feature flags:
 
+```mermaid
 graph TB
     subgraph "🔧 Build Configurations"
         A["`**Default Build**<br/>cargo build`"] --> B["`🎭 Dummy Backend<br/>Lorem Ipsum Testing`"]
@@ -195,6 +200,7 @@ graph TB
     style B fill:#fff3e0
     style D fill:#e8f5e8
     style M fill:#f3e5f5
+```
 
 ### 🛠️ **Build Commands**
 
@@ -210,6 +216,7 @@ graph TB
 
 ThreadRunner uses a **JSON-over-Unix-socket** protocol for high-performance IPC:
 
+```mermaid
 sequenceDiagram
     participant User
     participant CLI as "threadrunner CLI"
@@ -254,6 +261,7 @@ sequenceDiagram
     
     note over Daemon: Daemon stays alive for next request
     note over Daemon: Auto-unload model after idle timeout
+```
 
 ### 📋 **Protocol Specification (v1)**
 
