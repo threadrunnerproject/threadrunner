@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::net::{UnixListener, UnixStream};
@@ -8,7 +7,7 @@ use tokio::time;
 use crate::config::{self, SOCKET_PATH, IDLE_TIMEOUT_SECS};
 use crate::frame::{read_frame, write_frame};
 use crate::state::DaemonState;
-use threadrunner_core::ipc::{PromptRequest, TokenResponse, ErrorResponse, PROTOCOL_VERSION};
+use threadrunner_core::ipc::{PromptRequest, TokenResponse, ErrorResponse};
 use threadrunner_core::model::{BackendKind, load_backend};
 
 /// Get the backend kind from environment variable or use default
@@ -82,16 +81,6 @@ fn get_model_path(backend_kind: BackendKind) -> anyhow::Result<std::path::PathBu
                 crate::config::default_model_path()
             }
         }
-        
-        #[cfg(not(feature = "dummy"))]
-        BackendKind::Dummy => {
-            anyhow::bail!("Dummy backend not available - not compiled with dummy feature")
-        }
-        
-        #[cfg(not(feature = "llama"))]
-        BackendKind::Llama => {
-            anyhow::bail!("Llama backend not available - not compiled with llama feature")
-        }
     }
 }
 
@@ -117,7 +106,7 @@ pub async fn run_daemon() -> anyhow::Result<()> {
             interval.tick().await;
             
             let mut state_guard = idle_state.lock().await;
-            if let Some(ref mut model) = state_guard.model {
+            if let Some(ref mut _model) = state_guard.model {
                 let elapsed = state_guard.last_activity.elapsed();
                 if elapsed.as_secs() > IDLE_TIMEOUT_SECS {
                     tracing::info!("Idle timeout fired after {} seconds", elapsed.as_secs());
@@ -214,10 +203,6 @@ async fn handle_client_inner(stream: &mut UnixStream, state: Arc<Mutex<DaemonSta
             BackendKind::Dummy => "dummy",
             #[cfg(feature = "llama")]
             BackendKind::Llama => "llama",
-            #[cfg(not(feature = "dummy"))]
-            BackendKind::Dummy => unreachable!("Dummy backend not compiled"),
-            #[cfg(not(feature = "llama"))]
-            BackendKind::Llama => unreachable!("Llama backend not compiled"),
         };
         
         tracing::info!("Loading {} backend with model: {}", backend_name, model_path.display());

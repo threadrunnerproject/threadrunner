@@ -13,7 +13,7 @@ use anyhow;
 
 /// Connects to the daemon socket, spawning the daemon if necessary
 pub async fn connect_or_spawn() -> Result<UnixStream> {
-    let socket_path = socket_path().map_err(|e| Error::Io(e))?;
+    let socket_path = socket_path().map_err(|e| Error::Protocol(e.to_string()))?;
     
     tracing::debug!("Attempting to connect to daemon at: {}", socket_path.display());
     // First attempt to connect
@@ -76,8 +76,8 @@ pub async fn connect_or_spawn() -> Result<UnixStream> {
 
 /// Spawns the daemon process
 async fn spawn_daemon() -> Result<()> {
-    let daemon_exe_path = daemon_exe().map_err(|e| Error::Io(e))?;
-    let socket_path = socket_path().map_err(|e| Error::Io(e))?;
+    let daemon_exe_path = daemon_exe().map_err(|e| Error::Protocol(e.to_string()))?;
+    let socket_path = socket_path().map_err(|e| Error::Protocol(e.to_string()))?;
     
     tracing::info!("Spawning daemon process: {:?}", daemon_exe_path);
     let child = Command::new(daemon_exe_path)
@@ -105,13 +105,13 @@ pub async fn send_prompt(stream: &mut UnixStream, prompt: &str) -> Result<()> {
     tracing::info!("Sending prompt to daemon (length: {} chars)", prompt.len());
     // Serialize via serde_json and write framed bytes
     let request_json = serde_json::to_vec(&request).map_err(|e| Error::Protocol(e.to_string()))?;
-    write_frame(stream, &request_json).await.map_err(|e| Error::Io(e))?;
+    write_frame(stream, &request_json).await.map_err(|e| Error::Protocol(e.to_string()))?;
     tracing::debug!("Prompt sent successfully, waiting for response");
     
     let mut token_count = 0;
     // Loop reading frames and try to deserialize as either TokenResponse or ErrorResponse
     loop {
-        let response_data = read_frame(stream).await.map_err(|e| Error::Io(e))?;
+        let response_data = read_frame(stream).await.map_err(|e| Error::Protocol(e.to_string()))?;
         
         // First try to parse as ErrorResponse
         if let Ok(error_response) = serde_json::from_slice::<ErrorResponse>(&response_data) {

@@ -1,10 +1,12 @@
 use std::fs;
+#[cfg(feature = "llama")]
 use std::path::PathBuf;
 
 pub const SOCKET_PATH: &str = "/tmp/threadrunner.sock";
 pub const IDLE_TIMEOUT_SECS: u64 = 300;
 
 /// Returns the default model path for GGUF models
+#[cfg(feature = "llama")]
 pub fn default_model_path() -> anyhow::Result<PathBuf> {
     let home_dir = dirs::home_dir()
         .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;

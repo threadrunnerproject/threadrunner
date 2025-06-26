@@ -49,7 +49,7 @@ fn parse_backend(backend: &str) -> Result<BackendKind> {
         "llama" => Ok(BackendKind::Llama),
         
         _ => {
-            let available_backends = available_backends();
+            let _available_backends = available_backends();
             Err(Error::Unknown)
         }
     }
