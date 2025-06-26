@@ -1,0 +1,8 @@
+[package]
+name = "threadrunner"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tokio.workspace = true
+threadrunner-core = { path = "../core" } 
